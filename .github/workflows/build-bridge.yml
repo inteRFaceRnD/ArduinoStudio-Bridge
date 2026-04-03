@@ -1,0 +1,105 @@
+name: Build Bridge Installers
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win32
+            label: Windows
+          - os: macos-latest
+            platform: darwin
+            label: macOS
+          - os: ubuntu-latest
+            platform: linux
+            label: Linux
+
+    runs-on: ${{ matrix.os }}
+    name: Build (${{ matrix.label }})
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libudev-dev \
+            libusb-1.0-0-dev \
+            libasound2-dev \
+            libgtk-3-dev \
+            libnotify-dev \
+            libnss3 \
+            libxss1 \
+            libxtst6 \
+            xvfb \
+            rpm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Rebuild native modules
+        run: npx electron-rebuild
+
+      - name: Build installer
+        env:
+          DISPLAY: ':99.0'
+        run: |
+          ${{ runner.os == 'Linux' && 'Xvfb :99 -screen 0 1024x768x24 &' || 'echo skip_xvfb' }}
+          npm run make
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bridge-${{ matrix.label }}
+          path: out/make/
+          retention-days: 30
+          if-no-files-found: warn
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: installers/
+
+      - name: List installers
+        run: find installers/ -type f
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "ArduinoStudio Bridge ${{ github.ref_name }}"
+          draft: false
+          files: installers/**/*
+          body: |
+            ## ArduinoStudio Bridge ${{ github.ref_name }}
+
+            | Platform | File |
+            |----------|------|
+            | Windows | `.exe` installer |
+            | macOS | `.dmg` disk image |
+            | Linux | `.deb` package |
+
+            **[Download from arduinostudio.com](https://www.arduinostudio.com/download)**

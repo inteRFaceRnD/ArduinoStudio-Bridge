@@ -1,0 +1,49 @@
+{
+  "name": "arduinostudio",
+  "productName": "ArduinoStudio Bridge",
+  "version": "1.0.0",
+  "description": "ArduinoStudio Bridge is the local desktop bridge for ArduinoStudio hardware control.",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "make:win": "electron-forge make --platform win32",
+    "make:mac": "electron-forge make --platform darwin",
+    "make:linux": "electron-forge make --platform linux",
+    "publish": "electron-forge publish",
+    "lint": "node --check src/main.js && node --check src/services/wsService.js && node --check src/services/deviceManager.js && node --check src/services/firmata-service.js && node --check src/board/boardFunctions.js",
+    "test": "jest --config jest.config.cjs --runInBand"
+  },
+  "keywords": [],
+  "author": {
+    "name": "inteRFace R&D",
+    "email": "shocron@gmail.com"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "avrgirl-arduino": "^5.0.1",
+    "electron-squirrel-startup": "^1.0.1",
+    "fs-extra": "^11.2.0",
+    "johnny-five": "2.1.0",
+    "nan": "^2.22.2",
+    "serialport": "^13.0.0",
+    "socket.io": "^4.8.1",
+    "update-electron-app": "^3.0.0"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^7.8.0",
+    "@electron-forge/maker-deb": "^7.8.0",
+    "@electron-forge/maker-dmg": "^7.11.1",
+    "@electron-forge/maker-rpm": "^7.8.0",
+    "@electron-forge/maker-squirrel": "^7.8.0",
+    "@electron-forge/maker-zip": "^7.8.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.8.0",
+    "@electron-forge/plugin-fuses": "^7.8.0",
+    "@electron/fuses": "^1.8.0",
+    "@types/johnny-five": "^2.1.11",
+    "electron": "35.2.1",
+    "jest": "^30.2.0",
+    "png2icons": "^2.0.1"
+  }
+}
