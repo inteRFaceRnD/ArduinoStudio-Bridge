@@ -40,6 +40,14 @@ Windows may show a blue SmartScreen warning when you first run the installer. Th
 
 [inteRFace R&D](https://interfacernd.com) — Hardware & software engineering, from concept to production.
 
+## License
+
+This source code is published for transparency and security review. All rights are reserved by inteRFace R&D Ltd.
+
+You may **read and inspect** the code, but you may **not** copy, modify, distribute, or use it in your own projects without written permission from inteRFace R&D.
+
+For licensing inquiries: contact@inteRFaceRnD.com
+
 ## Support
 
 - Website: [arduinostudio.com](https://www.arduinostudio.com)
