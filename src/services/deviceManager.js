@@ -206,24 +206,36 @@ class DeviceManager {
             });
 
             await Promise.all(playableSequences.map(async ({ sequence, firstComponent }) => {
-                this._emitPlaybackEvent({
-                    event: 'sequence-start',
-                    runId: requestedRunId,
-                    boardId: sequence?.board || runBoardId,
-                    sequenceId: sequence?._id || null,
-                    devicePort: board.port,
-                });
-
-                await processComponent(firstComponent, playbackClient, signal, board);
-
-                if (!signal.aborted) {
+                const runOnce = async () => {
                     this._emitPlaybackEvent({
-                        event: 'sequence-complete',
+                        event: 'sequence-start',
                         runId: requestedRunId,
                         boardId: sequence?.board || runBoardId,
                         sequenceId: sequence?._id || null,
                         devicePort: board.port,
                     });
+
+                    await processComponent(firstComponent, playbackClient, signal, board);
+
+                    if (!signal.aborted) {
+                        this._emitPlaybackEvent({
+                            event: 'sequence-complete',
+                            runId: requestedRunId,
+                            boardId: sequence?.board || runBoardId,
+                            sequenceId: sequence?._id || null,
+                            devicePort: board.port,
+                        });
+                    }
+                };
+
+                // Infinity loop: repeat until stopped
+                if (sequence?.infinityLoop) {
+                    while (!signal.aborted) {
+                        await runOnce();
+                        if (!signal.aborted) await new Promise(r => setTimeout(r, 50));
+                    }
+                } else {
+                    await runOnce();
                 }
             }));
 
