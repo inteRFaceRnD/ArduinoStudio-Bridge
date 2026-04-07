@@ -35,6 +35,7 @@ class AppInitializer {
 
     _appInit() {
         app.on('ready', () => {
+            this._enableLaunchAtLoginByDefault();
             this._createTray();
             this._setStatus('Running');
             this._listenForUpdates();
@@ -68,6 +69,22 @@ class AppInitializer {
                 this._tray = null;
             }
         });
+    }
+
+    _enableLaunchAtLoginByDefault() {
+        // First-run opt-in for launch-at-login. We persist a marker file on disk
+        // so we only do this once: if the user later disables it explicitly, we
+        // never re-enable behind their back.
+        try {
+            const userData = app.getPath('userData');
+            const markerPath = path.join(userData, '.launch-at-login-initialized');
+            const fs = require('fs');
+            if (fs.existsSync(markerPath)) return;
+            app.setLoginItemSettings({ openAtLogin: true });
+            fs.writeFileSync(markerPath, String(Date.now()));
+        } catch (e) {
+            console.error('Could not enable launch-at-login:', e.message);
+        }
     }
 
     _startAutoUpdateChecks() {
