@@ -1,7 +1,7 @@
 {
   "name": "arduinostudio",
   "productName": "ArduinoStudio Bridge",
-  "version": "1.0.0",
+  "version": "1.6.1",
   "description": "ArduinoStudio Bridge is the local desktop bridge for ArduinoStudio hardware control.",
   "main": "src/main.js",
   "scripts": {
