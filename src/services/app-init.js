@@ -38,6 +38,9 @@ class AppInitializer {
             this._createTray();
             this._setStatus('Running');
             this._listenForUpdates();
+            // Auto-check for updates by default — 5s after launch, then every 6h.
+            // Users no longer need to click "Check for Updates" manually.
+            this._startAutoUpdateChecks();
         });
 
         // Handle arduinostudio:// protocol when app is already running (Windows/Linux)
@@ -65,6 +68,18 @@ class AppInitializer {
                 this._tray = null;
             }
         });
+    }
+
+    _startAutoUpdateChecks() {
+        if (!app.isPackaged || process.platform === 'linux') return;
+        // Initial check shortly after startup
+        setTimeout(() => {
+            try { autoUpdater.checkForUpdates(); } catch (e) { console.error('Auto-update check failed:', e.message); }
+        }, 5000);
+        // Periodic check every 6 hours
+        setInterval(() => {
+            try { autoUpdater.checkForUpdates(); } catch (e) { console.error('Auto-update check failed:', e.message); }
+        }, 6 * 60 * 60 * 1000);
     }
 
     _listenForUpdates() {
@@ -152,9 +167,10 @@ class AppInitializer {
             };
         }
 
+        const version = app.getVersion();
         const menu = Menu.buildFromTemplate([
-            { label: 'ArduinoStudio Bridge', enabled: false },
-            { label: `Status: ${this._status}`, enabled: false },
+            { label: `ArduinoStudio Bridge  ·  v${version}`, enabled: false },
+            { label: `   Status: ${this._status}`, enabled: false },
             { type: 'separator' },
             {
                 label: 'Open ArduinoStudio',
@@ -173,7 +189,7 @@ class AppInitializer {
                 },
             },
             { type: 'separator' },
-            { label: 'Quit', role: 'quit' },
+            { label: 'Quit ArduinoStudio Bridge', role: 'quit' },
         ]);
 
         this._tray.setContextMenu(menu);
