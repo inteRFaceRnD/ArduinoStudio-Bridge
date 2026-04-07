@@ -109,6 +109,12 @@ class DeviceManager {
                 if (!this.boardsList.some(board => board.port === boardPath)) {
                     try {
                         const board = await getBoard(boardPath, this.wsService);
+                        // Mark when this board was first registered. johnny-five sometimes
+                        // emits 'ready' before the Uno bootloader is fully done, which
+                        // makes the very first sequence run after plug-in get its first
+                        // I/O write swallowed (LED turns on but the next component never
+                        // executes). play() honors this timestamp to add a settle delay.
+                        board._addedAt = Date.now();
                         this.boardsList.push(board);
                     } catch (error) {
                         const msg = error.message || '';
@@ -180,6 +186,20 @@ class DeviceManager {
             }
 
             cleanupInstances();
+
+            // Settle delay for freshly plugged-in boards. Without this, the first
+            // play after USB plug-in often loses its first write (LED ON sticks,
+            // chain stops). The Uno bootloader needs ~2s after enumeration before
+            // it actually accepts Firmata sysex; johnny-five emits 'ready' too early.
+            if (board._addedAt) {
+                const sinceAdded = Date.now() - board._addedAt;
+                const SETTLE_MS = 2500;
+                if (sinceAdded < SETTLE_MS) {
+                    await new Promise(r => setTimeout(r, SETTLE_MS - sinceAdded));
+                }
+                // Only delay once per board.
+                board._addedAt = null;
+            }
 
             const runBoardId = data?.boardId || playableSequences[0].sequence?.board || null;
             const controller = new AbortController();
